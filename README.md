@@ -50,7 +50,7 @@ tests/              浏览器端验证入口
 
 ## 在线演示
 
-GitHub Pages：https://liu9512.github.io/restart-codex-speed-test/
+GitHub Pages：https://liu9512.github.io/campus-activity-management-system/
 
 ## 开发过程与实验分支
 
@@ -63,3 +63,4 @@ GitHub Pages：https://liu9512.github.io/restart-codex-speed-test/
 - `experiment/recommendation-ranking`：尝试根据历史报名分类推荐活动，因演示数据不足且不属于核心业务闭环而放弃。
 
 这些分支用于体现需求取舍、候选设计和工程判断过程，不代表最终交付版本。
+
