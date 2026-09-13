@@ -47,3 +47,7 @@ tests/              浏览器端验证入口
 - 报名截止后不能报名或取消。
 - 教师只能管理本人创建的活动。
 - 学生、教师、管理员按角色访问对应功能。
+
+## 在线演示
+
+GitHub Pages：https://liu9512.github.io/restart-codex-speed-test/
