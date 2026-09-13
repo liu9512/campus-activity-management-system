@@ -51,3 +51,15 @@ tests/              浏览器端验证入口
 ## 在线演示
 
 GitHub Pages：https://liu9512.github.io/restart-codex-speed-test/
+
+## 开发过程与实验分支
+
+`main` 分支保留最终采用的 V1.0，提交历史按项目骨架、认证权限、活动报名、教师管理、自动验证逐步形成。
+
+以下分支用于记录开发过程中评估过但没有采用的方案，均未合并到 `main`：
+
+- `experiment/backend-database`：尝试引入后端 API 和数据库，因课程原型缺少部署环境、会提高复现成本而放弃。
+- `experiment/notification-reminder`：尝试实现活动开始前提醒，因需要外部推送、授权和重试机制而移出 V1.0 范围。
+- `experiment/recommendation-ranking`：尝试根据历史报名分类推荐活动，因演示数据不足且不属于核心业务闭环而放弃。
+
+这些分支用于体现需求取舍、候选设计和工程判断过程，不代表最终交付版本。
