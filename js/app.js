@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   "use strict";
 
   var main = document.getElementById("main-content");
@@ -55,7 +55,7 @@
 
     header.innerHTML = [
       '<div class="header-inner">',
-      '  <a class="brand" href="#/"><span class="brand-mark">C</span><span><strong>校园活动管理系统</strong><small>V1.0 · 工程迭代实验</small></span></a>',
+      '  <a class="brand" href="#/"><span class="brand-mark">C</span><span><strong>校园活动管理系统</strong><small>V2.0 · 需求演化实验</small></span></a>',
       '  <nav class="nav-links">' + navHtml + '</nav>',
       '  <div class="header-account">' + accountHtml + '</div>',
       '</div>'
@@ -80,7 +80,7 @@
       '  <div class="hero-content">',
       '    <p class="eyebrow">Campus Activity System</p>',
       '    <h1>校园活动，从发布到报名形成完整闭环</h1>',
-      '    <p>V1.0 面向学生、活动组织教师和系统管理员，提供活动查询、在线报名、活动管理与报名名单跟踪。</p>',
+      '    <p>V2.0 在活动发布、浏览和报名基础上，增加资格审核、候补队列、自动递补、状态透明化与平台活动监管。</p>',
       '    <div class="hero-actions">',
       '      <a class="btn btn-primary" href="#/activities">进入活动中心</a>',
       user ? '      <a class="btn btn-secondary" href="' + (user.role === "student" ? "#/my-registrations" : "#/manage") + '">查看工作台</a>' : '      <a class="btn btn-secondary" href="#/login">登录系统</a>',
@@ -88,7 +88,7 @@
       '  </div>',
       '</section>',
       '<section class="section-block grid grid-4">',
-      statCard("系统活动", summary.activities, "已纳入 V1.0"),
+      statCard("系统活动", summary.activities, "已纳入 V2.0"),
       statCard("正在报名", summary.published, "当前开放活动"),
       statCard("有效报名", summary.registrations, "系统累计记录"),
       statCard("有效用户", summary.users, "学生、教师与管理员"),
@@ -105,7 +105,7 @@
     var isLogin = mode === "login";
     main.innerHTML = [
       '<section class="auth-layout">',
-      '  <div class="auth-hero"><div><p class="eyebrow">Campus Activity System V1.0</p><h1>让校园活动的发布、参与和管理更清晰</h1><p>学生快速找到可报名活动，教师低成本发布并掌握名单，管理员保证账号和权限可控。</p></div><div class="auth-features"><div class="auth-feature"><strong>活动发现</strong><small>关键词、分类和状态筛选</small></div><div class="auth-feature"><strong>报名闭环</strong><small>报名、取消和状态跟踪</small></div><div class="auth-feature"><strong>角色权限</strong><small>三类角色分权控制</small></div></div></div>',
+      '  <div class="auth-hero"><div><p class="eyebrow">Campus Activity System V2.0</p><h1>让校园活动的发布、参与和管理更清晰</h1><p>学生快速找到可报名活动，教师低成本发布并掌握名单，管理员保证账号和权限可控。</p></div><div class="auth-features"><div class="auth-feature"><strong>活动发现</strong><small>关键词、分类和状态筛选</small></div><div class="auth-feature"><strong>报名闭环</strong><small>报名、取消和状态跟踪</small></div><div class="auth-feature"><strong>角色权限</strong><small>三类角色分权控制</small></div></div></div>',
       '  <div class="card auth-card"><div class="auth-tabs"><button class="auth-tab' + (isLogin ? " is-active" : "") + '" type="button" data-action="auth-tab" data-mode="login">登录</button><button class="auth-tab' + (!isLogin ? " is-active" : "") + '" type="button" data-action="auth-tab" data-mode="register">学生注册</button></div>',
       isLogin ? renderLoginForm() : renderRegisterForm(),
       '  </div>',
@@ -128,7 +128,7 @@
 
   function renderRegisterForm() {
     return [
-      '<h2>注册学生账号</h2><p class="muted small">V1.0 开放学生自助注册，教师和管理员账号由系统预置。</p>',
+      '<h2>注册学生账号</h2><p class="muted small">V2.0 开放学生自助注册，教师和管理员账号由系统预置。</p>',
       '<form id="register-form" class="grid" novalidate>',
       '  <div class="field"><label for="register-name">姓名</label><input class="input" id="register-name" name="displayName" maxlength="20" required></div>',
       '  <div class="field"><label for="register-username">用户名</label><input class="input" id="register-username" name="username" maxlength="20" placeholder="4～20位小写字母、数字或下划线" required></div>',
@@ -143,23 +143,27 @@
     return '<span class="status status-' + escapeHtml(status) + '">' + escapeHtml(window.CampusActivities.statusLabel(status)) + '</span>';
   }
 
+  function renderRegistrationBadge(status) {
+    return '<span class="status status-' + escapeHtml(status) + '">' + escapeHtml(window.CampusActivities.registrationStatusLabel(status)) + '</span>';
+  }
+
   function renderActivityCard(activity) {
     var user = window.CampusAuth.currentUser();
     var status = window.CampusActivities.effectiveStatus(activity);
     var count = window.CampusActivities.activeCount(activity.id);
+    var waitlistCount = window.CampusActivities.waitlistRegistrations(activity.id).length;
     var percent = Math.min(100, Math.round(count / Number(activity.capacity) * 100));
     var registration = user ? window.CampusActivities.getRegistration(activity.id, user.id) : null;
     var actionHtml;
-
-    if (registration && registration.status === "registered") {
-      actionHtml = '<button class="btn btn-secondary" type="button" data-action="view-activity" data-id="' + escapeHtml(activity.id) + '">查看并管理</button>';
+    if (registration && ["registered", "pending", "waitlist"].indexOf(registration.status) !== -1) {
+      actionHtml = '<button class="btn btn-secondary" type="button" data-action="view-activity" data-id="' + escapeHtml(activity.id) + '">查看当前状态</button>';
     } else if (!user) {
       actionHtml = '<a class="btn btn-primary" href="#/login">登录后报名</a>';
     } else {
       var state = window.CampusActivities.registrationState(activity, user);
-      actionHtml = '<button class="btn ' + (state.allowed ? "btn-primary" : "btn-secondary") + '" type="button" data-action="view-activity" data-id="' + escapeHtml(activity.id) + '">' + (state.allowed ? "查看并报名" : "查看详情") + '</button>';
+      var label = state.resultStatus === "waitlist" ? "查看并加入候补" : state.resultStatus === "pending" ? "查看并提交审核" : state.allowed ? "查看并报名" : "查看详情";
+      actionHtml = '<button class="btn ' + (state.allowed ? "btn-primary" : "btn-secondary") + '" type="button" data-action="view-activity" data-id="' + escapeHtml(activity.id) + '">' + label + '</button>';
     }
-
     return [
       '<article class="card activity-card">',
       '  <div class="card-top"><span class="tag">' + escapeHtml(activity.category) + '</span>' + renderStatusBadge(status) + '</div>',
@@ -168,13 +172,15 @@
       '  <div class="activity-meta">',
       '    <div class="meta-row"><strong>时间</strong><span>' + escapeHtml(window.CampusActivities.formatDateTime(activity.startAt)) + '</span></div>',
       '    <div class="meta-row"><strong>地点</strong><span>' + escapeHtml(activity.location) + '</span></div>',
-      '    <div class="meta-row"><strong>容量</strong><span>' + count + ' / ' + activity.capacity + '<div class="progress"><span style="width:' + percent + '%"></span></div></span></div>',
+      '    <div class="meta-row"><strong>正式名额</strong><span>' + count + ' / ' + activity.capacity + '<div class="progress"><span style="width:' + percent + '%"></span></div></span></div>',
+      '    <div class="meta-row"><strong>报名方式</strong><span>' + (activity.requiresReview ? "需资格审核" : "提交后直接录取或候补") + '</span></div>',
+      '    <div class="meta-row"><strong>候补人数</strong><span>' + waitlistCount + ' 人</span></div>',
       '  </div>',
+      '  <div class="notice small">参加资格：' + escapeHtml(activity.eligibilityText || "全校学生均可报名。") + '</div>',
       '  <div class="card-footer"><span class="muted small">报名截止 ' + escapeHtml(window.CampusActivities.formatDateTime(activity.registrationDeadline)) + '</span>' + actionHtml + '</div>',
       '</article>'
     ].join("");
   }
-
   function renderActivities() {
     var activities = window.CampusActivities.listVisibleActivities();
     var categories = activities.map(function (activity) { return activity.category; }).filter(function (value, index, list) { return list.indexOf(value) === index; });
@@ -204,18 +210,25 @@
     var user = window.CampusAuth.currentUser();
     var status = window.CampusActivities.effectiveStatus(activity);
     var count = window.CampusActivities.activeCount(activity.id);
+    var waitlistCount = window.CampusActivities.waitlistRegistrations(activity.id).length;
+    var pendingCount = window.CampusActivities.pendingRegistrations(activity.id).length;
     var registration = user ? window.CampusActivities.getRegistration(activity.id, user.id) : null;
     var state = window.CampusActivities.registrationState(activity, user);
     var actionHtml = "";
-
-    if (registration && registration.status === "registered") {
-      actionHtml = '<button class="btn btn-soft-danger" type="button" data-action="cancel-registration" data-id="' + escapeHtml(activity.id) + '">取消报名</button>';
+    if (registration && ["registered", "pending", "waitlist"].indexOf(registration.status) !== -1) {
+      actionHtml = '<button class="btn btn-soft-danger" type="button" data-action="cancel-registration" data-id="' + escapeHtml(activity.id) + '">' + (registration.status === "waitlist" ? "退出候补" : "取消报名") + '</button>';
     } else if (user && state.allowed) {
-      actionHtml = '<button class="btn btn-primary" type="button" data-action="register-activity" data-id="' + escapeHtml(activity.id) + '">确认报名</button>';
+      var label = state.resultStatus === "pending" ? "提交资格审核" : state.resultStatus === "waitlist" ? "加入候补队列" : "确认报名";
+      actionHtml = '<button class="btn btn-primary" type="button" data-action="register-activity" data-id="' + escapeHtml(activity.id) + '">' + label + '</button>';
     } else if (!user) {
       actionHtml = '<a class="btn btn-primary" href="#/login">登录后报名</a>';
     }
-
+    var currentMessage;
+    if (registration && registration.status === "registered") currentMessage = "你已被录取为正式参加人员。";
+    else if (registration && registration.status === "pending") currentMessage = "报名已提交，正在等待活动组织教师审核。";
+    else if (registration && registration.status === "waitlist") currentMessage = "你正在候补，当前排在第 " + window.CampusActivities.getWaitlistPosition(registration) + " 位。";
+    else if (registration && registration.status === "rejected") currentMessage = "本次报名未通过审核。" + (registration.decisionNote ? " 原因：" + registration.decisionNote : "");
+    else currentMessage = state.reason;
     openModal(activity.title, [
       '<div class="grid grid-2">',
       '  <div><span class="muted small">活动分类</span><p>' + escapeHtml(activity.category) + '</p></div>',
@@ -223,37 +236,33 @@
       '  <div><span class="muted small">开始时间</span><p>' + escapeHtml(window.CampusActivities.formatDateTime(activity.startAt)) + '</p></div>',
       '  <div><span class="muted small">结束时间</span><p>' + escapeHtml(window.CampusActivities.formatDateTime(activity.endAt)) + '</p></div>',
       '  <div><span class="muted small">活动地点</span><p>' + escapeHtml(activity.location) + '</p></div>',
-      '  <div><span class="muted small">报名名额</span><p>' + count + ' / ' + activity.capacity + '</p></div>',
+      '  <div><span class="muted small">正式名额</span><p>' + count + ' / ' + activity.capacity + '</p></div>',
+      '  <div><span class="muted small">报名方式</span><p>' + (activity.requiresReview ? "需要资格审核" : "无需审核") + '</p></div>',
+      '  <div><span class="muted small">候补 / 待审核</span><p>' + waitlistCount + ' 人 / ' + pendingCount + ' 人</p></div>',
       '</div>',
-      '<div class="notice' + (state.allowed || (registration && registration.status === "registered") ? "" : " warning") + '" style="margin-top:18px">' + escapeHtml(registration && registration.status === "registered" ? "你已成功报名，请留意活动时间。" : state.reason) + '</div>',
+      '<div class="notice' + (state.allowed || (registration && ["registered", "pending", "waitlist"].indexOf(registration.status) !== -1) ? "" : " warning") + '" style="margin-top:18px">' + escapeHtml(currentMessage) + '</div>',
+      '<h3 style="margin-top:22px">参加资格</h3><p class="muted">' + escapeHtml(activity.eligibilityText || "全校学生均可报名。") + '</p>',
       '<h3 style="margin-top:22px">活动说明</h3><p class="muted">' + escapeHtml(activity.description) + '</p>',
       '<p class="muted small">报名截止：' + escapeHtml(window.CampusActivities.formatDateTime(activity.registrationDeadline)) + '</p>'
     ].join(""), actionHtml + '<button class="btn btn-secondary" type="button" data-action="close-modal">关闭</button>');
   }
-
   function renderMyRegistrations() {
     var items = window.CampusActivities.getMyRegistrations();
     main.innerHTML = [
-      '<div class="page-heading"><div><h1>我的报名</h1><p>查看报名结果、活动状态并管理尚未截止的报名。</p></div></div>',
+      '<div class="page-heading"><div><h1>我的报名</h1><p>查看审核结果、候补位置和正式录取状态。</p></div></div>',
       items.length ? [
-        '<div class="table-wrap"><table><thead><tr><th>活动</th><th>活动时间</th><th>报名状态</th><th>活动状态</th><th>操作</th></tr></thead><tbody>',
+        '<div class="table-wrap"><table><thead><tr><th>活动</th><th>活动时间</th><th>报名状态</th><th>状态说明</th><th>活动状态</th><th>操作</th></tr></thead><tbody>',
         items.map(function (item) {
-          var canCancel = item.registration.status === "registered" && window.CampusActivities.effectiveStatus(item.activity) === "published";
-          return [
-            '<tr>',
-            '<td><strong>' + escapeHtml(item.activity.title) + '</strong><br><span class="muted small">' + escapeHtml(item.activity.location) + '</span></td>',
-            '<td>' + escapeHtml(window.CampusActivities.formatDateTime(item.activity.startAt)) + '</td>',
-            '<td>' + (item.registration.status === "registered" ? '<span class="status status-published">已报名</span>' : '<span class="status status-cancelled">已取消</span>') + '</td>',
-            '<td>' + renderStatusBadge(window.CampusActivities.effectiveStatus(item.activity)) + '</td>',
-            '<td>' + (canCancel ? '<button class="btn btn-soft-danger" type="button" data-action="cancel-registration" data-id="' + escapeHtml(item.activity.id) + '">取消报名</button>' : '<span class="muted small">无需操作</span>') + '</td>',
-            '</tr>'
-          ].join("");
+          var reg = item.registration;
+          var activityStatus = window.CampusActivities.effectiveStatus(item.activity);
+          var canCancel = ["registered", "pending", "waitlist"].indexOf(reg.status) !== -1 && activityStatus === "published";
+          var detail = reg.status === "waitlist" ? "当前候补第 " + item.waitlistPosition + " 位" : reg.status === "pending" ? "等待活动教师审核" : reg.status === "rejected" ? (reg.decisionNote || "未通过资格审核") : reg.status === "registered" ? "已获得正式名额" : "已取消";
+          return '<tr><td><strong>' + escapeHtml(item.activity.title) + '</strong><br><span class="muted small">' + escapeHtml(item.activity.location) + '</span></td><td>' + escapeHtml(window.CampusActivities.formatDateTime(item.activity.startAt)) + '</td><td>' + renderRegistrationBadge(reg.status) + '</td><td>' + escapeHtml(detail) + '</td><td>' + renderStatusBadge(activityStatus) + '</td><td>' + (canCancel ? '<button class="btn btn-soft-danger" type="button" data-action="cancel-registration" data-id="' + escapeHtml(item.activity.id) + '">' + (reg.status === "waitlist" ? "退出候补" : "取消/撤回") + '</button>' : '<span class="muted small">无需操作</span>') + '</td></tr>';
         }).join(""),
         '</tbody></table></div>'
       ].join("") : '<section class="card empty-state"><h3>暂无报名记录</h3><p>前往活动中心报名后可在这里查看。</p><a class="btn btn-primary" href="#/activities">浏览活动</a></section>'
     ].join("");
   }
-
   function formatLocalInput(value) {
     var date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
@@ -269,18 +278,19 @@
       '  <div class="form-grid">',
       '    <div class="field full"><label for="activity-title">活动名称</label><input class="input" id="activity-title" name="title" maxlength="50" value="' + escapeHtml(value.title || "") + '" required></div>',
       '    <div class="field"><label for="activity-category">活动分类</label><select class="select" id="activity-category" name="category" required><option value="">请选择</option>' + categories.map(function (category) { return '<option value="' + escapeHtml(category) + '"' + (value.category === category ? " selected" : "") + '>' + escapeHtml(category) + '</option>'; }).join("") + '</select></div>',
-      '    <div class="field"><label for="activity-capacity">活动容量</label><input class="input" id="activity-capacity" name="capacity" type="number" min="1" max="500" value="' + escapeHtml(value.capacity || 50) + '" required></div>',
+      '    <div class="field"><label for="activity-capacity">正式参加上限</label><input class="input" id="activity-capacity" name="capacity" type="number" min="1" max="500" value="' + escapeHtml(value.capacity || 50) + '" required></div>',
       '    <div class="field full"><label for="activity-location">活动地点</label><input class="input" id="activity-location" name="location" maxlength="50" value="' + escapeHtml(value.location || "") + '" required></div>',
       '    <div class="field"><label for="activity-start">开始时间</label><input class="input" id="activity-start" name="startAt" type="datetime-local" value="' + escapeHtml(formatLocalInput(value.startAt)) + '" required></div>',
       '    <div class="field"><label for="activity-end">结束时间</label><input class="input" id="activity-end" name="endAt" type="datetime-local" value="' + escapeHtml(formatLocalInput(value.endAt)) + '" required></div>',
       '    <div class="field full"><label for="activity-deadline">报名截止时间</label><input class="input" id="activity-deadline" name="registrationDeadline" type="datetime-local" value="' + escapeHtml(formatLocalInput(value.registrationDeadline)) + '" required></div>',
+      '    <div class="field full"><label for="activity-eligibility">参加资格说明</label><textarea class="textarea" id="activity-eligibility" name="eligibilityText" maxlength="200" placeholder="例如：限某年级、专业或需要满足前置条件">' + escapeHtml(value.eligibilityText || "全校学生均可报名。") + '</textarea></div>',
       '    <div class="field full"><label for="activity-description">活动说明</label><textarea class="textarea" id="activity-description" name="description" maxlength="500" required>' + escapeHtml(value.description || "") + '</textarea></div>',
+      '    <label class="field full"><span><input type="checkbox" name="requiresReview"' + (value.requiresReview ? " checked" : "") + '> 报名需要教师审核资格</span></label>',
       activity ? '' : '    <label class="field full"><span><input type="checkbox" name="publishNow"> 保存后立即发布</span></label>',
       '  </div>',
       '</form>'
     ].join("");
   }
-
   function openActivityForm(activityId) {
     var activity = activityId ? window.CampusActivities.getActivity(activityId) : null;
     if (activityId && !activity) return showToast("活动不存在。", "error");
@@ -288,64 +298,61 @@
   }
 
   function renderManage() {
+    var user = window.CampusAuth.currentUser();
+    var isAdmin = user && user.role === "admin";
     var activities = window.CampusActivities.listManageableActivities();
     var active = activities.filter(function (activity) { return window.CampusActivities.effectiveStatus(activity) === "published"; }).length;
     var registrations = activities.reduce(function (total, activity) { return total + window.CampusActivities.activeCount(activity.id); }, 0);
-    var draft = activities.filter(function (activity) { return window.CampusActivities.effectiveStatus(activity) === "draft"; }).length;
-
+    var pending = activities.reduce(function (total, activity) { return total + window.CampusActivities.pendingRegistrations(activity.id).length; }, 0);
+    var waitlist = activities.reduce(function (total, activity) { return total + window.CampusActivities.waitlistRegistrations(activity.id).length; }, 0);
     main.innerHTML = [
-      '<div class="page-heading"><div><h1>活动管理</h1><p>创建、编辑、发布活动并查看报名名单。教师只能管理本人创建的活动。</p></div><button class="btn btn-primary" type="button" data-action="create-activity">创建活动</button></div>',
-      '<section class="grid grid-3">',
-      statCard("正在报名", active, "当前开放活动"),
-      statCard("草稿活动", draft, "尚未发布"),
-      statCard("有效报名", registrations, "所管理活动累计"),
-      '</section>',
+      '<div class="page-heading"><div><h1>' + (isAdmin ? "活动监管" : "活动管理") + '</h1><p>' + (isAdmin ? "查看全部活动，并对违规或明显错误的平台活动执行下架和恢复。" : "创建、审核和发布本人活动，管理正式名单与候补队列。") + '</p></div>' + (isAdmin ? '' : '<button class="btn btn-primary" type="button" data-action="create-activity">创建活动</button>') + '</div>',
+      '<section class="grid grid-4">', statCard("正在报名", active, "当前开放活动"), statCard("正式参加", registrations, "已占用名额"), statCard("待审核", pending, "需要教师处理"), statCard("候补人员", waitlist, "按进入时间排序"), '</section>',
       '<section class="section-block">',
       activities.length ? [
-        '<div class="table-wrap"><table><thead><tr><th>活动</th><th>状态</th><th>时间</th><th>报名</th><th>更新时间</th><th>操作</th></tr></thead><tbody>',
+        '<div class="table-wrap"><table><thead><tr><th>活动</th><th>状态</th><th>正式 / 上限</th><th>待审核</th><th>候补</th><th>操作</th></tr></thead><tbody>',
         activities.map(function (activity) {
           var status = window.CampusActivities.effectiveStatus(activity);
-          var actions = ['<button class="btn btn-ghost" type="button" data-action="edit-activity" data-id="' + escapeHtml(activity.id) + '">编辑</button>'];
-          if (activity.status === "draft") actions.push('<button class="btn btn-ghost" type="button" data-action="publish-activity" data-id="' + escapeHtml(activity.id) + '">发布</button>');
-          if (activity.status === "published") actions.push('<button class="btn btn-ghost" type="button" data-action="close-activity" data-id="' + escapeHtml(activity.id) + '">截止报名</button>');
-          if (activity.status === "closed") actions.push('<button class="btn btn-ghost" type="button" data-action="publish-activity" data-id="' + escapeHtml(activity.id) + '">重新发布</button>');
-          if (activity.status === "cancelled") actions.push('<button class="btn btn-ghost" type="button" data-action="restore-draft" data-id="' + escapeHtml(activity.id) + '">恢复草稿</button>');
-          if (activity.status !== "cancelled" && status !== "ended") actions.push('<button class="btn btn-soft-danger" type="button" data-action="cancel-activity" data-id="' + escapeHtml(activity.id) + '">取消活动</button>');
+          var actions = [];
+          if (!isAdmin) {
+            actions.push('<button class="btn btn-ghost" type="button" data-action="edit-activity" data-id="' + escapeHtml(activity.id) + '">编辑</button>');
+            if (activity.status === "draft") actions.push('<button class="btn btn-ghost" type="button" data-action="publish-activity" data-id="' + escapeHtml(activity.id) + '">发布</button>');
+            if (activity.status === "published") actions.push('<button class="btn btn-ghost" type="button" data-action="close-activity" data-id="' + escapeHtml(activity.id) + '">截止报名</button>');
+            if (activity.status === "closed") actions.push('<button class="btn btn-ghost" type="button" data-action="publish-activity" data-id="' + escapeHtml(activity.id) + '">重新发布</button>');
+            if (activity.status === "cancelled") actions.push('<button class="btn btn-ghost" type="button" data-action="restore-draft" data-id="' + escapeHtml(activity.id) + '">恢复草稿</button>');
+            if (activity.status !== "cancelled" && status !== "ended") actions.push('<button class="btn btn-soft-danger" type="button" data-action="cancel-activity" data-id="' + escapeHtml(activity.id) + '">取消活动</button>');
+          } else if (activity.status === "suspended") {
+            actions.push('<button class="btn btn-ghost" type="button" data-action="restore-activity" data-id="' + escapeHtml(activity.id) + '">恢复活动</button>');
+          } else {
+            actions.push('<button class="btn btn-soft-danger" type="button" data-action="suspend-activity" data-id="' + escapeHtml(activity.id) + '">下架</button>');
+          }
           actions.push('<button class="btn btn-ghost" type="button" data-action="view-roster" data-id="' + escapeHtml(activity.id) + '">名单</button>');
-          return [
-            '<tr>',
-            '<td><strong>' + escapeHtml(activity.title) + '</strong><br><span class="muted small">' + escapeHtml(activity.category) + ' · ' + escapeHtml(activity.location) + '</span></td>',
-            '<td>' + renderStatusBadge(status) + '</td>',
-            '<td>' + escapeHtml(window.CampusActivities.formatDateTime(activity.startAt)) + '</td>',
-            '<td>' + window.CampusActivities.activeCount(activity.id) + ' / ' + activity.capacity + '</td>',
-            '<td>' + escapeHtml(window.CampusActivities.formatDateTime(activity.updatedAt)) + '</td>',
-            '<td>' + actions.join(" ") + '</td>',
-            '</tr>'
-          ].join("");
+          return '<tr><td><strong>' + escapeHtml(activity.title) + '</strong><br><span class="muted small">' + escapeHtml(activity.category) + ' · ' + escapeHtml(activity.location) + '</span></td><td>' + renderStatusBadge(status) + '</td><td>' + window.CampusActivities.activeCount(activity.id) + ' / ' + activity.capacity + '</td><td>' + window.CampusActivities.pendingRegistrations(activity.id).length + '</td><td>' + window.CampusActivities.waitlistRegistrations(activity.id).length + '</td><td>' + actions.join(" ") + '</td></tr>';
         }).join(""),
         '</tbody></table></div>'
-      ].join("") : '<div class="card empty-state">还没有活动，点击“创建活动”开始。</div>',
+      ].join("") : '<div class="card empty-state">还没有活动。</div>',
       '</section>'
     ].join("");
   }
-
   function renderRoster(activityId) {
     var activity = window.CampusActivities.getActivity(activityId);
     if (!activity) return showToast("活动不存在。", "error");
     var rows;
-    try {
-      rows = window.CampusActivities.getRoster(activityId);
-    } catch (error) {
-      return showToast(error.message, "error");
-    }
-    openModal(activity.title + " · 报名名单", rows.length ? [
-      '<p class="muted">有效报名 ' + rows.length + ' 人，活动容量 ' + activity.capacity + ' 人。</p>',
-      '<div class="table-wrap"><table><thead><tr><th>序号</th><th>姓名</th><th>用户名</th><th>报名时间</th></tr></thead><tbody>',
-      rows.map(function (item, index) { return '<tr><td>' + (index + 1) + '</td><td>' + escapeHtml(item.user.displayName) + '</td><td>' + escapeHtml(item.user.username) + '</td><td>' + escapeHtml(window.CampusActivities.formatDateTime(item.registration.registeredAt)) + '</td></tr>'; }).join(""),
-      '</tbody></table></div>'
-    ].join("") : '<div class="empty-state">当前还没有有效报名。</div>', '<button class="btn btn-secondary" type="button" data-action="close-modal">关闭</button><button class="btn btn-primary" type="button" data-action="export-roster" data-id="' + escapeHtml(activity.id) + '">导出 CSV</button>');
+    try { rows = window.CampusActivities.getRoster(activityId); }
+    catch (error) { return showToast(error.message, "error"); }
+    var formal = rows.filter(function (item) { return item.registration.status === "registered"; }).length;
+    var pending = rows.filter(function (item) { return item.registration.status === "pending"; }).length;
+    var waiting = rows.filter(function (item) { return item.registration.status === "waitlist"; }).length;
+    openModal(activity.title + " · 报名处理", [
+      '<div class="grid grid-3"><div class="notice">正式参加：' + formal + ' / ' + activity.capacity + '</div><div class="notice warning">待审核：' + pending + '</div><div class="notice">候补队列：' + waiting + '</div></div>',
+      rows.length ? '<div class="table-wrap section"><table><thead><tr><th>姓名</th><th>状态</th><th>候补顺序</th><th>提交时间</th><th>审核备注</th><th>操作</th></tr></thead><tbody>' + rows.map(function (item) {
+        var reg = item.registration;
+        var canReview = window.CampusAuth.currentUser().role === "teacher" && activity.organizerId === window.CampusAuth.currentUser().id;
+        var actions = reg.status === "pending" && canReview ? '<button class="btn btn-success" type="button" data-action="review-registration" data-id="' + escapeHtml(reg.id) + '" data-decision="approve">通过</button> <button class="btn btn-soft-danger" type="button" data-action="review-registration" data-id="' + escapeHtml(reg.id) + '" data-decision="reject">拒绝</button>' : '<span class="muted small">—</span>';
+        return '<tr><td><strong>' + escapeHtml(item.user.displayName) + '</strong><br><span class="muted small">' + escapeHtml(item.user.username) + '</span></td><td>' + renderRegistrationBadge(reg.status) + '</td><td>' + (item.waitlistPosition || "—") + '</td><td>' + escapeHtml(window.CampusActivities.formatDateTime(reg.registeredAt)) + '</td><td>' + escapeHtml(reg.decisionNote || "—") + '</td><td>' + actions + '</td></tr>';
+      }).join("") + '</tbody></table></div>' : '<div class="empty-state">当前还没有报名记录。</div>'
+    ].join(""), '<button class="btn btn-secondary" type="button" data-action="close-modal">关闭</button><button class="btn btn-primary" type="button" data-action="export-roster" data-id="' + escapeHtml(activity.id) + '">导出 CSV</button>');
   }
-
   function downloadRoster(activityId) {
     try {
       var activity = window.CampusActivities.getActivity(activityId);
@@ -367,14 +374,22 @@
 
   function renderAdmin() {
     var users = window.CampusAuth.listUsers();
+    var activities = window.CampusActivities.listManageableActivities();
     var logs = window.CampusStore.getData().operationLogs.slice(0, 18);
     main.innerHTML = [
-      '<div class="page-heading"><div><h1>用户管理</h1><p>查看账号、角色和状态，并维护演示数据。</p></div><button class="btn btn-soft-danger" type="button" data-action="reset-demo">重置演示数据</button></div>',
-      '<section class="section-block"><div class="table-wrap"><table><thead><tr><th>姓名</th><th>用户名</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>',
+      '<div class="page-heading"><div><h1>平台管理</h1><p>维护账号权限，并监管全部活动状态；不介入具体报名审核。</p></div><button class="btn btn-soft-danger" type="button" data-action="reset-demo">重置演示数据</button></div>',
+      '<section class="section-block"><div class="section-title"><h2>用户与角色</h2></div><div class="table-wrap"><table><thead><tr><th>姓名</th><th>用户名</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody>',
       users.map(function (user) {
         var nextStatus = user.status === "active" ? "disabled" : "active";
-        var actionLabel = user.status === "active" ? "停用" : "启用";
-        return '<tr><td>' + escapeHtml(user.displayName) + '</td><td>' + escapeHtml(user.username) + '</td><td>' + escapeHtml(roleLabel(user.role)) + '</td><td>' + (user.status === "active" ? '<span class="status status-published">正常</span>' : '<span class="status status-cancelled">已停用</span>') + '</td><td>' + escapeHtml(window.CampusActivities.formatDateTime(user.createdAt)) + '</td><td><button class="btn btn-ghost" type="button" data-action="toggle-user-status" data-id="' + escapeHtml(user.id) + '" data-status="' + nextStatus + '">' + actionLabel + '</button></td></tr>';
+        return '<tr><td>' + escapeHtml(user.displayName) + '</td><td>' + escapeHtml(user.username) + '</td><td>' + escapeHtml(roleLabel(user.role)) + '</td><td>' + (user.status === "active" ? '<span class="status status-published">正常</span>' : '<span class="status status-cancelled">已停用</span>') + '</td><td><button class="btn btn-ghost" type="button" data-action="toggle-user-status" data-id="' + escapeHtml(user.id) + '" data-status="' + nextStatus + '">' + (nextStatus === "disabled" ? "停用" : "启用") + '</button></td></tr>';
+      }).join(""),
+      '</tbody></table></div></section>',
+      '<section class="section-block"><div class="section-title"><h2>活动状态监管</h2></div><div class="table-wrap"><table><thead><tr><th>活动</th><th>负责人</th><th>状态</th><th>正式 / 候补 / 待审核</th><th>操作</th></tr></thead><tbody>',
+      activities.map(function (activity) {
+        var organizer = window.CampusActivities.getOrganizer(activity);
+        var status = window.CampusActivities.effectiveStatus(activity);
+        var action = activity.status === "suspended" ? '<button class="btn btn-ghost" type="button" data-action="restore-activity" data-id="' + escapeHtml(activity.id) + '">恢复</button>' : '<button class="btn btn-soft-danger" type="button" data-action="suspend-activity" data-id="' + escapeHtml(activity.id) + '">下架</button>';
+        return '<tr><td>' + escapeHtml(activity.title) + '<br><span class="muted small">' + escapeHtml(activity.eligibilityText || "") + '</span></td><td>' + escapeHtml(organizer ? organizer.displayName : "未知") + '</td><td>' + renderStatusBadge(status) + '</td><td>' + window.CampusActivities.activeCount(activity.id) + ' / ' + window.CampusActivities.waitlistRegistrations(activity.id).length + ' / ' + window.CampusActivities.pendingRegistrations(activity.id).length + '</td><td>' + action + '</td></tr>';
       }).join(""),
       '</tbody></table></div></section>',
       '<section class="section-block card"><h2>最近操作记录</h2>',
@@ -382,7 +397,6 @@
       '</section>'
     ].join("");
   }
-
   function renderNotFound() {
     main.innerHTML = '<section class="card empty-state"><h2>页面不存在或无权访问</h2><p>请通过顶部导航返回。</p><a class="btn btn-primary" href="#/">返回首页</a></section>';
   }
@@ -445,24 +459,22 @@
     }
     if (action === "register-activity") {
       try {
-        window.CampusActivities.register(target.getAttribute("data-id"));
-        showToast("报名成功。", "success");
+        var registration = window.CampusActivities.register(target.getAttribute("data-id"));
+        var message = registration.status === "pending" ? "报名已提交，等待教师审核。" : registration.status === "waitlist" ? "已加入候补队列。" : "报名成功，已获得正式名额。";
+        showToast(message, "success");
         closeModal();
         renderRoute();
-      } catch (error) {
-        showToast(error.message, "error");
-      }
+      } catch (error) { showToast(error.message, "error"); }
       return;
     }
     if (action === "cancel-registration") {
       try {
-        window.CampusActivities.cancelRegistration(target.getAttribute("data-id"));
-        showToast("已取消报名。", "success");
+        var cancelResult = window.CampusActivities.cancelRegistration(target.getAttribute("data-id"));
+        var cancelMessage = cancelResult.promoted ? "操作成功，已按顺序递补候补人员。" : cancelResult.previousStatus === "waitlist" ? "已退出候补。" : "已取消报名。";
+        showToast(cancelMessage, "success");
         closeModal();
         renderRoute();
-      } catch (error) {
-        showToast(error.message, "error");
-      }
+      } catch (error) { showToast(error.message, "error"); }
       return;
     }
     if (action === "create-activity") {
@@ -484,7 +496,29 @@
       }
       return;
     }
-    if (action === "view-roster") {
+    if (action === "review-registration") {
+      try {
+        var reg = window.CampusStore.getData().registrations.find(function (item) { return item.id === target.getAttribute("data-id"); });
+        var decision = target.getAttribute("data-decision");
+        window.CampusActivities.reviewRegistration(target.getAttribute("data-id"), decision, decision === "reject" ? "未通过资格审核" : "资格审核通过", window.CampusAuth.currentUser());
+        showToast(decision === "approve" ? "已通过报名审核。" : "已拒绝报名申请。", "success");
+        renderRoster(reg.activityId);
+      } catch (error) { showToast(error.message, "error"); }
+      return;
+    }
+    if (action === "suspend-activity") {
+      var reason = window.prompt("请输入活动下架原因：", "活动信息不符合平台管理要求");
+      if (reason !== null) {
+        try { window.CampusActivities.suspendActivity(target.getAttribute("data-id"), reason, window.CampusAuth.currentUser()); showToast("活动已下架。", "success"); renderRoute(); }
+        catch (error) { showToast(error.message, "error"); }
+      }
+      return;
+    }
+    if (action === "restore-activity") {
+      try { window.CampusActivities.restoreActivity(target.getAttribute("data-id"), window.CampusAuth.currentUser()); showToast("活动已恢复。", "success"); renderRoute(); }
+      catch (error) { showToast(error.message, "error"); }
+      return;
+    }    if (action === "view-roster") {
       renderRoster(target.getAttribute("data-id"));
       return;
     }
@@ -571,6 +605,8 @@
         endAt: activityData.get("endAt"),
         registrationDeadline: activityData.get("registrationDeadline"),
         description: activityData.get("description"),
+        requiresReview: Boolean(activityData.get("requiresReview")),
+        eligibilityText: activityData.get("eligibilityText"),
         status: activityData.get("publishNow") ? "published" : "draft"
       };
       try {

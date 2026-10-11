@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f4f7fb;
   --surface: #ffffff;
   --surface-soft: #f8fafc;
@@ -886,4 +886,48 @@ tbody tr:hover {
     align-items: stretch;
     flex-direction: column;
   }
+}
+
+.status-pending,
+.status-waitlist {
+  color: #9a6208;
+  background: var(--warning-soft);
+}
+
+.status-registered {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.status-rejected,
+.status-suspended {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.candidate-queue {
+  display: grid;
+  gap: 8px;
+}
+
+.candidate-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  gap: 10px;
+}
+
+.candidate-position {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--primary);
+  font-weight: 800;
 }
