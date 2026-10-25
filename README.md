@@ -53,3 +53,9 @@ GitHub Pages：https://liu9512.github.io/campus-activity-management-system/
 - `v1.0`：实验一完成的初始版本基线。
 - `feature/v2-requirement-evolution`：根据访谈证据完成 V2.0 数据模型、业务规则、界面和验证迭代。
 - `main`：保留 V2.0 最终可演示版本。
+
+## 开源贡献清单
+
+- [x] 阅读 README 与版本说明
+- [x] 了解 V2.0 业务规则与验证方式
+- [ ] 使用 Fork → Branch → Commit → PR 流程提交改进
